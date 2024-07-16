@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  app:
+    container_name: fur_app
+    build:
+      dockerfile: ./app/Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    env_file:
+       - ./.env
+    restart: on-failure
+
+  postgres:
+    container_name: fur_app_db
+    image: "postgres:16.3"
+    environment:
+      POSTGRES_DB: ${PG_NAME}
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+
