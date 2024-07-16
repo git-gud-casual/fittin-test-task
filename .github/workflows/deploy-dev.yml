@@ -10,10 +10,9 @@ jobs:
     runs-on: self-hosted
 
     env:
-      PG_NAME: fur_db_test
-      PG_USER: postgres
-      PG_PASSWORD: secret
-
+      POSTGRES_NAME: fur_db_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
 
     steps:
       - name: Checkout Repo
