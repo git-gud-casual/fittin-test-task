@@ -6,7 +6,7 @@ services:
     build:
       dockerfile: ./app/Dockerfile
     ports:
-      - "8000:8000"
+      - "0.0.0.0:8000:8000"
     depends_on:
       - postgres
     env_file:

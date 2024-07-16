@@ -1,0 +1,23 @@
+name: Deploy Dev
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deployment:
+    runs-on: self-hosted
+
+    env:
+      PG_NAME: fur_db_test
+      PG_USER: postgres
+      PG_PASSWORD: secret
+
+
+    steps:
+      - name: Checkout Repo
+        run: actions/checkout@v3
+
+      - name: Docker Compose
+        run: docker compose up -d --build
