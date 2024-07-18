@@ -30,6 +30,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '192.168.0.100'
 ]
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1"]
 
 
 # Application definition
@@ -44,7 +45,8 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework',
     'rest_framework_simplejwt',
-    'users'
+    'users',
+    'yandex_id'
 ]
 
 MIDDLEWARE = [
@@ -139,3 +141,14 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+DEFAULT_FROM_EMAIL = getenv("DEFAULT_FROM_EMAIL")
+EMAIL_HOST = getenv("EMAIL_HOST")
+EMAIL_PORT = int(getenv("EMAIL_PORT"))
+EMAIL_USE_SSL = getenv("EMAIL_USE_SSL", "false").lower() == "true"
+EMAIL_HOST_USER = getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = getenv("EMAIL_HOST_PASSWORD")
+
+YDX_CLIENT_ID = getenv("YDX_CLIENT_ID")
+YDX_CLIENT_SECRET = getenv("YDX_CLIENT_SECRET")

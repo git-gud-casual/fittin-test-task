@@ -13,6 +13,15 @@ jobs:
       POSTGRES_NAME: fur_db_test
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
+      YDX_CLIENT_ID: 4fa9cb22324047cba05d3ffeab4deeb7
+      YDX_CLIENT_SECRET: ${{ secrets.YDX_CLIENT_SECRET }}
+
+      DEFAULT_FROM_EMAIL: ${{ secrets.EMAIL_USER }}
+      EMAIL_HOST_USER: ${{ secrets.EMAIL_USER }}
+      EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+      EMAIL_HOST: smtp.yandex.ru
+      EMAIL_USE_SSL: True
+      EMAIL_PORT: 465
 
     steps:
       - name: Checkout Repo
