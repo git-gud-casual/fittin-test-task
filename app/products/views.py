@@ -96,6 +96,8 @@ class ProductListView(generics.ListAPIView):
                 q = q.order_by("total_price")
             elif sort_by == "price_down":
                 q = q.order_by("-total_price")
+            else:
+                q = q.order_by("id")
             return q.all()
         except ValueError:
             raise ValidationError({"error": "query param min_value or max_value is not integer"})
