@@ -2,7 +2,7 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from json import loads
 
-from .models import Product, Category
+from .models import Product, Category, ProductSize
 from .serializers import CategorySerializer, ProductSerializer
 
 
@@ -24,6 +24,18 @@ class ProductsTestCase(APITestCase):
             product.category = Category.objects.get(pk=i % 5 + 1)
             product.save()
 
+            size = ProductSize()
+            size.size = "m"
+            size.count_in_stock = i % 5
+            size.product = product
+            size.save()
+
+            size = ProductSize()
+            size.size = "l"
+            size.count_in_stock = 0
+            size.product = product
+            size.save()
+
         cls.api_client = APIClient()
 
     def test_retrieve(self):
@@ -41,7 +53,7 @@ class ProductsTestCase(APITestCase):
         self.assertEqual(resp["results"][0]["price"], 20)
 
     def test_get_list_by_post(self):
-        resp = loads(self.api_client.post("/products?sort_by=price_down&min_price=7&max_price=19",
+        resp = loads(self.api_client.post("/products?sort_by=price_down&min_price=6&max_price=19",
                                           data={"category_id": 2}, format="json").content)
         self.assertEqual(resp["results"][0]["price"], 19)
         self.assertEqual(resp["count"], 11)

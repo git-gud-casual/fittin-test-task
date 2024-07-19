@@ -6,12 +6,13 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.exceptions import ValidationError
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
+from django.db.models import Sum
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from .serializers import (CategorySerializer, ProductSerializer,
                           GetProductsByCategorySer)
-from .models import Category, Product
+from .models import Category, Product, ProductSize
 
 
 class CategoryListView(generics.ListAPIView):
@@ -84,7 +85,9 @@ class ProductListView(generics.ListAPIView):
             min_value = int(self.request.query_params.get("min_price", 0))
             max_value = int(self.request.query_params.get("max_price", -1))
             sort_by = self.request.query_params.get("sort_by")
-            q = Product.objects.filter(price__gte=min_value)
+            q = Product.objects.filter(price__gte=min_value).annotate(
+                total_count=Sum("sizes__count_in_stock")
+            ).filter(total_count__gt=0).order_by("id")
             if max_value >= 0:
                 q = q.filter(price__lte=max_value)
             if sort_by == "price_up":

@@ -24,3 +24,18 @@ class Product(models.Model):
     price = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     category = models.ForeignKey(Category, on_delete=models.PROTECT,
                                  related_name="products")
+
+
+class ProductSize(models.Model):
+    SIZE_CHOICES = (
+        ("s", "S"),
+        ("m", "M"),
+        ("l", "L")
+    )
+    size = models.CharField(max_length=2, choices=SIZE_CHOICES)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE,
+                                related_name="sizes")
+    count_in_stock = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ("size", "product")
