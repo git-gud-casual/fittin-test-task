@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models.signals import post_save
+from celery import shared_task
+from django.core.mail import send_mail
 
 from typing import List
 
@@ -57,3 +60,20 @@ class ProductDiscount(models.Model):
     discount_count = models.PositiveIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(100)]
     )
+
+    @staticmethod
+    def send_emails_when_save(_, instance: "ProductDiscount", **__):
+        send_discount_for_users.delay(instance)
+
+
+post_save.connect(ProductDiscount.send_emails_when_save, sender=ProductDiscount)
+
+
+@shared_task
+def send_discount_for_users(discount: ProductDiscount):
+    subject = "Скидка"
+    message = (f"Скидка на отслеживаемый товар {discount.product.name}.\n"
+               f"Скидка {discount.discount_count}%. Финальная цена {discount.product.final_price}")
+    users_emails = discount.product.favourites_for_user.values_list("email", flat=True)
+    send_mail(subject, message,
+              recipient_list=users_emails, from_email=None)
