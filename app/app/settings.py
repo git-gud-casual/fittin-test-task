@@ -30,7 +30,6 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '192.168.0.100'
 ]
-CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1"]
 
 
 # Application definition
@@ -46,7 +45,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'users',
-    'yandex_id'
+    'yandex_id',
+    'products'
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,45 @@
+[
+  {
+    "model": "products.category",
+    "pk": 1,
+    "fields": {
+      "name": "jacket",
+      "displayed_name": "Куртки"
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 2,
+    "fields": {
+      "name": "fur_coat",
+      "displayed_name": "Шубы"
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 3,
+    "fields": {
+      "name": "dark_mink",
+      "parent_category": 2,
+      "displayed_name": "Темная норка"
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 4,
+    "fields": {
+      "name": "light_mink",
+      "parent_category": 2,
+      "displayed_name": "Светлая норка"
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 5,
+    "fields": {
+      "name": "another_fur",
+      "parent_category": 2,
+      "displayed_name": "Другие меха"
+    }
+  }
+]

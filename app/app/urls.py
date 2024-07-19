@@ -39,5 +39,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('swagger/', schema_view.with_ui('swagger')),
     path('user/', include('users.urls')),
-    path('yandex/', include('yandex_id.urls'))
+    path('yandex/', include('yandex_id.urls')),
+    path("", include("products.urls"))
 ]
