@@ -6,7 +6,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.exceptions import ValidationError
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
-from django.db.models import Sum
+from django.db.models import Sum, F
+from django.db.models.functions import Coalesce
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
@@ -86,14 +87,15 @@ class ProductListView(generics.ListAPIView):
             max_value = int(self.request.query_params.get("max_price", -1))
             sort_by = self.request.query_params.get("sort_by")
             q = Product.objects.filter(price__gte=min_value).annotate(
-                total_count=Sum("sizes__count_in_stock")
-            ).filter(total_count__gt=0).order_by("id")
+                total_count=Sum("sizes__count_in_stock"),
+                total_price=F("price") - F("price") * (Coalesce(F("discount__discount_count"), 0) * 0.01)
+            ).filter(total_count__gt=0)
             if max_value >= 0:
                 q = q.filter(price__lte=max_value)
             if sort_by == "price_up":
-                q = q.order_by("price")
+                q = q.order_by("total_price")
             elif sort_by == "price_down":
-                q = q.order_by("-price")
+                q = q.order_by("-total_price")
             return q.all()
         except ValueError:
             raise ValidationError({"error": "query param min_value or max_value is not integer"})

@@ -1,5 +1,6 @@
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 from typing import List
 
@@ -24,6 +25,15 @@ class Product(models.Model):
     price = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     category = models.ForeignKey(Category, on_delete=models.PROTECT,
                                  related_name="products")
+    favourite_for_users = models.ManyToManyField(User, related_name="favourites")
+
+    @property
+    def final_price(self) -> int:
+        try:
+            price = self.price - int(self.price * (self.discount.discount_count / 100))
+        except ProductDiscount.DoesNotExist:
+            price = self.price
+        return price
 
 
 class ProductSize(models.Model):
@@ -39,3 +49,11 @@ class ProductSize(models.Model):
 
     class Meta:
         unique_together = ("size", "product")
+
+
+class ProductDiscount(models.Model):
+    product = models.OneToOneField(Product, on_delete=models.CASCADE, primary_key=True,
+                                   related_name="discount")
+    discount_count = models.PositiveIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(100)]
+    )
