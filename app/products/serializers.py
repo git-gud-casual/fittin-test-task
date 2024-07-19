@@ -19,3 +19,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ("id", "image", "name", "description", "price", "category_id")
+
+
+class GetProductsByCategorySer(serializers.Serializer):
+    category_id = serializers.IntegerField()
