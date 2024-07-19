@@ -12,7 +12,7 @@ from drf_yasg import openapi
 
 from .serializers import (CategorySerializer, ProductSerializer,
                           GetProductsByCategorySer)
-from .models import Category, Product, ProductSize
+from .models import Category, Product
 
 
 class CategoryListView(generics.ListAPIView):
