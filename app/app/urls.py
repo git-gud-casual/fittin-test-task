@@ -21,20 +21,19 @@ from drf_yasg import openapi
 from rest_framework import permissions
 from .settings import DEBUG
 
-
 schema_view = get_schema_view(
-   openapi.Info(
-      title="Fur App API",
-      default_version='v1',
-      description="",
-      terms_of_service="https://www.google.com/policies/terms/",
-      contact=openapi.Contact(email="contact@snippets.local"),
-      license=openapi.License(name="BSD License"),
-   ),
-   public=True,
-   permission_classes=[permissions.AllowAny,] if DEBUG else [permissions.IsAdminUser],
+    openapi.Info(
+        title="Fur App API",
+        default_version='v1',
+        description="",
+        terms_of_service="https://www.google.com/policies/terms/",
+        contact=openapi.Contact(email="contact@snippets.local"),
+        license=openapi.License(name="BSD License"),
+    ),
+    url="https://46.72.238.25:8889",
+    public=True,
+    permission_classes=[permissions.AllowAny, ] if DEBUG else [permissions.IsAdminUser],
 )
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
