@@ -31,7 +31,8 @@ class Product(models.Model):
     price = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     category = models.ForeignKey(Category, on_delete=models.PROTECT,
                                  related_name="products")
-    favourite_for_users = models.ManyToManyField(User, related_name="favourites")
+    favourite_for_users = models.ManyToManyField(User, related_name="favourites",
+                                                 blank=True)
 
     @property
     def final_price(self) -> int:
@@ -58,6 +59,9 @@ class ProductSize(models.Model):
 
     class Meta:
         unique_together = ("size", "product")
+
+    def __str__(self):
+        return f"Product {self.product.id} Size {self.size}"
 
 
 class ProductDiscount(models.Model):
