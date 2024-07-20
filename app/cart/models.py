@@ -39,6 +39,7 @@ class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE,
                              related_name="orders")
     created_at = models.DateTimeField(default=timezone.now)
+    payed = models.BooleanField(default=False)
 
     @property
     def final_price(self):
