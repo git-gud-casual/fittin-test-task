@@ -1,6 +1,7 @@
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from json import loads
+from django.db.models.signals import post_save
 
 from .models import Product, Category, ProductSize, ProductDiscount
 from .serializers import CategorySerializer, ProductSerializer
@@ -13,6 +14,7 @@ class ProductsTestCase(APITestCase):
 
     @classmethod
     def setUpTestData(cls):
+        post_save.disconnect(ProductDiscount.send_emails_when_save, sender=ProductDiscount)
         for i in range(60):
             product = Product()
             product.name = "test"
