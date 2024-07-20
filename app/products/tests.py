@@ -12,9 +12,9 @@ class ProductsTestCase(APITestCase):
 
     api_client: APIClient
 
-    @classmethod
-    def setUpTestData(cls):
+    def setUp(self):
         post_save.disconnect(ProductDiscount.send_emails_when_save, sender=ProductDiscount)
+        self.products = []
         for i in range(60):
             product = Product()
             product.name = "test"
@@ -25,6 +25,7 @@ class ProductsTestCase(APITestCase):
             product.description = "test"
             product.category = Category.objects.get(pk=i % 5 + 1)
             product.save()
+            self.products.append(product)
 
             # Создание размеров для каждого не 5ого продукта
             # так же создание продукта отсутствующего на складах для каждого 10ого
@@ -47,22 +48,24 @@ class ProductsTestCase(APITestCase):
                 discount.discount_count = i + 1
                 discount.save()
 
-        cls.api_client = APIClient()
+        self.api_client = APIClient()
 
     def test_retrieve(self):
-        resp = loads(self.api_client.get("/product/1/").content)
-        ser1 = ProductSerializer(Product.objects.get(pk=1))
+        product = self.products[0]
+        resp = loads(self.api_client.get(f"/product/{product.id}/").content)
+        ser1 = ProductSerializer(product)
         self.assertDictEqual(ser1.data, resp)
         self.assertEqual(sum([size["count_in_stock"] for size in resp["sizes"]]), 0)
 
     def test_retrieve2(self):
-        resp = loads(self.api_client.get("/product/5/").content)
-        ser1 = ProductSerializer(Product.objects.get(pk=5))
+        product = self.products[4]
+        resp = loads(self.api_client.get(f"/product/{product.id}/").content)
+        ser1 = ProductSerializer(product)
         self.assertDictEqual(ser1.data, resp)
         self.assertEqual(sum([size["count_in_stock"] for size in resp["sizes"]]), 4)
 
     def test_retrieve404(self):
-        for id in (-1, 0, 61):
+        for id in (-1, 0, self.products[-1].id + 1):
             code = self.api_client.get(f"/product/{id}/").status_code
             self.assertEqual(status.HTTP_404_NOT_FOUND, code)
 
