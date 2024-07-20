@@ -64,7 +64,7 @@ class ProductDiscount(models.Model):
     product = models.OneToOneField(Product, on_delete=models.CASCADE, primary_key=True,
                                    related_name="discount")
     discount_count = models.PositiveIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(100)]
+        validators=[MinValueValidator(1), MaxValueValidator(99)]
     )
 
     @staticmethod
