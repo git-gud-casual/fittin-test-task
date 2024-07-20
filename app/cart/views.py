@@ -40,9 +40,10 @@ class CartViewSet(viewsets.GenericViewSet,
                 cart_entry.count += data["count"]
                 cart_entry.save()
             except CartEntry.DoesNotExist:
-                CartEntry.objects.create(cart=self.request.user.cart,
-                                         product=product,
-                                         count=data["count"])
+                cart_entry = CartEntry.objects.create(cart=self.request.user.cart,
+                                                      product=product,
+                                                      count=data["count"])
+            serializer.instance = cart_entry
         except ProductSize.DoesNotExist:
             raise ValidationError({"message": "productsize does not exist"})
 
@@ -55,6 +56,7 @@ class CartViewSet(viewsets.GenericViewSet,
             cart_entry.product = product
             cart_entry.count = data["count"]
             cart_entry.save()
+            serializer.instance = cart_entry
         except ProductSize.DoesNotExist:
             raise ValidationError({"message": "productsize does not exist"})
 
@@ -97,7 +99,7 @@ class OrderView(generics.CreateAPIView):
                         order=order,
                         product=entry.product,
                         count=entry.count,
-                        final_price=entry.count * entry.product.product.final_price
+                        final_price=entry.final_price
                     )
                     entry.product.count_in_stock -= entry.count
                     entry.product.save()

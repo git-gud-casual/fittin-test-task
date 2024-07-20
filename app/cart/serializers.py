@@ -12,6 +12,10 @@ class CartEntrySerializer(serializers.ModelSerializer):
         choices=ProductSize.SIZE_CHOICES,
         source="product.size"
     )
+    final_price = serializers.SerializerMethodField()
+
+    def get_final_price(self, obj: CartEntry):
+        return obj.final_price
 
     class Meta:
         model = CartEntry

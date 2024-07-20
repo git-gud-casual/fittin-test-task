@@ -1,11 +1,11 @@
 from rest_framework.test import APITestCase, APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
-from rest_framework.exceptions import ValidationError
+from django.db.models.signals import post_save
 from rest_framework import status
 from json import loads
 
-from products.models import Product, ProductSize, Category
+from products.models import Product, ProductSize, Category, ProductDiscount
 from .models import CartEntry
 
 
@@ -13,9 +13,13 @@ class ProductsTestCase(APITestCase):
     fixtures = ["categories.json"]
     api_client: APIClient
 
+    @classmethod
+    def setUpTestData(cls):
+        post_save.disconnect(ProductDiscount.send_emails_when_save, sender=ProductDiscount)
+
     def setUp(self):
         self.user = User.objects.create_user(username="test",
-                                        password="test")
+                                             password="test")
         token = RefreshToken.for_user(self.user)
         self.api_client = APIClient()
         self.api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token.access_token}")
@@ -39,6 +43,11 @@ class ProductsTestCase(APITestCase):
         product2.category = Category.objects.get(id=3)
         product2.save()
 
+        disc = ProductDiscount()
+        disc.product = product1
+        disc.discount_count = 50
+        disc.save()
+
         self.product1 = product1
         self.product2 = product2
 
@@ -51,7 +60,7 @@ class ProductsTestCase(APITestCase):
         ))
 
         CartEntry.objects.bulk_create((
-            CartEntry(product=self.sizes[0], cart=self.user.cart, count=1),
+            CartEntry(product=self.sizes[0], cart=self.user.cart, count=2),
             CartEntry(product=self.sizes[-1], cart=self.user.cart, count=5),
         ))
 
@@ -60,12 +69,14 @@ class ProductsTestCase(APITestCase):
             {
                 "product_id": self.product1.id,
                 "size": "s",
-                "count": 1
+                "count": 2,
+                "final_price": self.product1.final_price * 2
             },
             {
                 "product_id": self.product2.id,
                 "size": "l",
-                "count": 5
+                "count": 5,
+                "final_price": self.product2.final_price * 5
             },
         ]
         resp = loads(self.api_client.get("/cart").content)
@@ -118,7 +129,7 @@ class ProductsTestCase(APITestCase):
         code = self.api_client.post("/cart", body, format="json").status_code
         self.assertEqual(status.HTTP_201_CREATED, code)
         entry = self.user.cart.products.through.objects.get(product=size)
-        self.assertEqual(entry.count, 2)
+        self.assertEqual(entry.count, 3)
 
     def test_post4(self):
         body = {

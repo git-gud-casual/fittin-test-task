@@ -12,6 +12,10 @@ class Cart(models.Model):
                                 related_name="cart", primary_key=True)
     products = models.ManyToManyField(ProductSize, through="CartEntry")
 
+    @property
+    def final_price(self):
+        return sum(self.products.through.all())
+
     def __str__(self):
         return f"{self.user.username}`s cart"
 
@@ -22,6 +26,10 @@ class CartEntry(models.Model):
     count = models.PositiveIntegerField(
         validators=[MinValueValidator(1)]
     )
+
+    @property
+    def final_price(self) -> int:
+        return self.product.product.final_price * self.count
 
     class Meta:
         unique_together = ("product", "cart")
