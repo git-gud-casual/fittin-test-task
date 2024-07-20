@@ -1,11 +1,12 @@
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, viewsets, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.exceptions import ValidationError
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 
-from .serializers import CartEntrySerializer
-from .models import CartEntry, ProductSize
+from .serializers import CartEntrySerializer, OrderEntrySerializer
+from .models import CartEntry, ProductSize, OrderEntry, Order
 
 
 class CartViewSet(viewsets.GenericViewSet,
@@ -64,3 +65,46 @@ class CartViewSet(viewsets.GenericViewSet,
         obj = get_object_or_404(queryset, **filter_kwargs)
         self.check_object_permissions(self.request, obj)
         return obj
+
+
+class OrderView(generics.CreateAPIView):
+    serializer_class = OrderEntrySerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get_serializer(self, *args, **kwargs):
+        if self.request.method == "POST":
+            kwargs["many"] = True
+        return self.get_serializer_class()(*args, **kwargs)
+
+    def perform_create(self, serializer: OrderEntrySerializer):
+        entries_data = serializer.validated_data
+        print(entries_data)
+        qs = CartEntry.objects.filter(cart=self.request.user.cart)
+        try:
+            entries = [qs.get(product__product_id=data["product"]["product_id"],
+                              product__size=data["product"]["size"]) for data in entries_data]
+
+            with transaction.atomic():
+                order = Order.objects.create(
+                    user=self.request.user
+                )
+                order_entries = []
+                for entry in entries:
+                    if entry.product.count_in_stock < entry.product.count:
+                        raise ValidationError({"message": "order count bigger than count in stock"})
+                    order_entry = OrderEntry(
+                        order=order,
+                        product=entry.product,
+                        count=entry.count,
+                        final_price=entry.count * entry.product.product.final_price
+                    )
+                    entry.product.count_in_stock -= entry.count
+                    entry.product.save()
+                    entry.delete()
+                    order_entries.append(order_entry)
+                OrderEntry.objects.bulk_create(
+                    order_entries
+                )
+        except CartEntry.DoesNotExist:
+            raise ValidationError({"message": "not in cart"})
