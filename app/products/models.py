@@ -20,6 +20,9 @@ class Category(models.Model):
             ids.extend(child.get_self_and_children_ids())
         return ids
 
+    def __str__(self):
+        return self.displayed_name
+
 
 class Product(models.Model):
     image = models.URLField()
@@ -37,6 +40,9 @@ class Product(models.Model):
         except ProductDiscount.DoesNotExist:
             price = self.price
         return price
+
+    def __str__(self):
+        return self.name
 
 
 class ProductSize(models.Model):
@@ -62,18 +68,19 @@ class ProductDiscount(models.Model):
     )
 
     @staticmethod
-    def send_emails_when_save(_, instance: "ProductDiscount", **__):
-        send_discount_for_users.delay(instance)
+    def send_emails_when_save(sender, instance: "ProductDiscount", **__):
+        send_discount_for_users.delay(instance.pk)
 
 
 post_save.connect(ProductDiscount.send_emails_when_save, sender=ProductDiscount)
 
 
 @shared_task
-def send_discount_for_users(discount: ProductDiscount):
+def send_discount_for_users(discount_id: int):
+    discount = ProductDiscount.objects.get(pk=discount_id)
     subject = "Скидка"
     message = (f"Скидка на отслеживаемый товар {discount.product.name}.\n"
                f"Скидка {discount.discount_count}%. Финальная цена {discount.product.final_price}")
-    users_emails = discount.product.favourites_for_user.values_list("email", flat=True)
+    users_emails = discount.product.favourite_for_users.values_list("email", flat=True)
     send_mail(subject, message,
               recipient_list=users_emails, from_email=None)

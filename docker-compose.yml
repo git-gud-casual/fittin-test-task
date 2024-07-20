@@ -12,7 +12,7 @@ services:
       - postgres
       - redis
     environment:
-      POSTGRES_DB: ${POSTGRES_NAME}
+      POSTGRES_NAME: ${POSTGRES_NAME}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       YDX_CLIENT_ID: ${YDX_CLIENT_ID}
@@ -34,7 +34,7 @@ services:
       - postgres
       - redis
     environment:
-      POSTGRES_DB: ${POSTGRES_NAME}
+      POSTGRES_NAME: ${POSTGRES_NAME}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       YDX_CLIENT_ID: ${YDX_CLIENT_ID}
