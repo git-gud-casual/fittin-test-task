@@ -3,16 +3,20 @@ name: Deploy Dev
 on:
   push:
     branches:
-      - dev
+      - master
 
 jobs:
   deployment:
     runs-on: self-hosted
 
     env:
-      POSTGRES_NAME: fur_db_test
+      POSTGRES_NAME: fur_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secret
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+
+      ENVIRONMENT: prod
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+
       YDX_CLIENT_ID: 4fa9cb22324047cba05d3ffeab4deeb7
       YDX_CLIENT_SECRET: ${{ secrets.YDX_CLIENT_SECRET }}
 
@@ -22,6 +26,10 @@ jobs:
       EMAIL_HOST: smtp.yandex.ru
       EMAIL_USE_SSL: True
       EMAIL_PORT: 465
+
+      DJANGO_SUPERUSER_USERNAME: ${{ secrets.DJANGO_SUPERUSER_USERNAME }}
+      DJANGO_SUPERUSER_PASSWORD: ${{ secrets.DJANGO_SUPERUSER_PASSWORD }}
+      DJANGO_SUPERUSER_EMAIL: ${{ secrets.DJANGO_SUPERUSER_EMAIL }}
 
     steps:
       - name: Checkout Repo

@@ -2,6 +2,7 @@ version: "3.9"
 
 services:
   nginx:
+    container_name: fur-nginx-${ENVIRONMENT}
     image: nginx:alpine
     ports:
       - "0.0.0.0:8888:80"
@@ -14,14 +15,18 @@ services:
       - app
 
   app:
-    container_name: fur_app
+    container_name: fur-app-${ENVIRONMENT}
     build:
       dockerfile: ./app/Dockerfile
       target: api
+    ports:
+      - "0.0.0.0:8000:8000"
     depends_on:
       - postgres
       - redis
     environment:
+      ENVIRONMENT: ${ENVIRONMENT}
+      SECRET_KEY: ${SECRET_KEY}
       POSTGRES_NAME: ${POSTGRES_NAME}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -33,10 +38,12 @@ services:
       EMAIL_HOST: ${EMAIL_HOST}
       EMAIL_USE_SSL: ${EMAIL_USE_SSL}
       EMAIL_PORT: ${EMAIL_PORT}
-    restart: on-failure
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL}
 
   worker:
-    container_name: fur_celery_worker
+    container_name: fur-celery-worker-${ENVIRONMENT}
     build:
       dockerfile: ./app/Dockerfile
       target: worker
@@ -44,6 +51,8 @@ services:
       - postgres
       - redis
     environment:
+      ENVIRONMENT: ${ENVIRONMENT}
+      SECRET_KEY: ${SECRET_KEY}
       POSTGRES_NAME: ${POSTGRES_NAME}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -58,8 +67,10 @@ services:
     restart: on-failure
 
   postgres:
-    container_name: fur_app_db
+    container_name: fur-db-${ENVIRONMENT}
     image: "postgres:16.3"
+    volumes:
+      - "/home/ubuntu/fittin-test/postgres-data:/var/lib/postgresql/data"
     environment:
       POSTGRES_DB: ${POSTGRES_NAME}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -67,4 +78,5 @@ services:
 
   redis:
     image: redis:7-alpine3.20
+    container_name: fur-redis-${ENVIRONMENT}
     restart: on-failure

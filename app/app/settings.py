@@ -11,20 +11,20 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 from datetime import timedelta
 from pathlib import Path
-from os import getenv
+from os import getenv, path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+STATIC_ROOT = path.join(BASE_DIR, 'staticfiles')
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=$kmyowitbl1v_(0+vz2qw8nqd=q_=5nt#5j^wlzu#3vcfat-*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = getenv("ENVIRONMENT") == "dev"
+
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'django-insecure-=$kmyowitbl1v_(0+vz2qw8nqd=q_=5nt#5j^wlzu#3vcfat-*' if DEBUG else (
+    getenv("SECRET_KEY"))
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
@@ -53,8 +53,12 @@ INSTALLED_APPS = [
     "cart"
 ]
 
+if DEBUG:
+    INSTALLED_APPS.insert(0, "whitenoise.runserver_nostatic")
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -62,6 +66,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 ROOT_URLCONF = 'app.urls'
 
@@ -121,6 +131,7 @@ AUTHENTICATION_BACKENDS = ["app.backends.UsernameOrEmailBackend"]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication'
     ],
     'DEFAULT_RENDERER_CLASSES': [
@@ -136,7 +147,10 @@ SWAGGER_SETTINGS = {
             "in": "header",
             "name": "Authorization",
             "description": 'You will have to add the "Bearer" prefix manually when setting the token.',
-        }
+        },
+        'basic': {
+            'type': 'basic'
+        },
     },
 }
 
