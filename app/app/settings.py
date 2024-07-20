@@ -74,6 +74,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://46.72.238.25:8889"
 ]
 
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 STORAGES = {
     "staticfiles": {
