@@ -31,6 +31,7 @@ ALLOWED_HOSTS = [
     '192.168.0.100',
     '46.72.238.25'
 ]
+CSRF_TRUSTED_ORIGINS = ['https://*.46.72.238.25:8889']
 
 
 # Application definition
