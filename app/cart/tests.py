@@ -59,7 +59,7 @@ class ProductsTestCase(APITestCase):
             ProductSize(size="l", product=product2, count_in_stock=100)
         ))
 
-        CartEntry.objects.bulk_create((
+        self.cart_entries = CartEntry.objects.bulk_create((
             CartEntry(product=self.sizes[0], cart=self.user.cart, count=2),
             CartEntry(product=self.sizes[-1], cart=self.user.cart, count=5),
         ))
@@ -169,4 +169,79 @@ class ProductsTestCase(APITestCase):
         code = api_client.post("/cart").status_code
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, code)
         code = api_client.delete("/cart/1/m").status_code
+        self.assertEqual(status.HTTP_401_UNAUTHORIZED, code)
+
+    def test_order1(self):
+        code = self.api_client.post("/order", [], format="json").status_code
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, code)
+
+    def test_order2(self):
+        size = self.sizes[0]
+        body = [
+            {
+                "product_id": size.product.id,
+                "size": size.size
+            }
+        ]
+        entry = self.user.cart.products.through.objects.get(product=size)
+        code = self.api_client.post("/order", body, format="json").status_code
+        self.assertEqual(status.HTTP_201_CREATED, code)
+        self.assertEqual(self.user.orders.first().final_price, entry.final_price)
+        with self.assertRaises(CartEntry.DoesNotExist):
+            _ = self.user.cart.products.through.objects.get(product=size)
+        old_count = size.count_in_stock
+        size.refresh_from_db()
+        self.assertEqual(size.count_in_stock, old_count - entry.count)
+
+    def test_order3(self):
+        size1, size2 = self.sizes[0], self.sizes[-1]
+        body = [
+            {
+                "product_id": size1.product.id,
+                "size": size1.size
+            },
+            {
+                "product_id": size2.product.id,
+                "size": size2.size
+            }
+        ]
+        final_price = self.user.cart.final_price
+        code = self.api_client.post("/order", body, format="json").status_code
+        self.assertEqual(status.HTTP_201_CREATED, code)
+        for entry in self.cart_entries:
+            size = entry.product
+            with self.assertRaises(CartEntry.DoesNotExist):
+                _ = self.user.cart.products.through.objects.get(product=size)
+            old_count = size.count_in_stock
+            size.refresh_from_db()
+            self.assertEqual(size.count_in_stock, old_count - entry.count)
+        self.assertEqual(self.user.orders.first().final_price, final_price)
+
+    def test_order4(self):
+        size = self.sizes[-1]
+        size.count_in_stock = 0
+        size.save()
+        body = [
+            {
+                "product_id": size.product.id,
+                "size": size.size
+            }
+        ]
+        code = self.api_client.post("/order", body, format="json").status_code
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, code)
+
+    def test_order5(self):
+        size = self.sizes[-1]
+        body = [
+            {
+                "product_id": size.product.id,
+                "size": "s"
+            }
+        ]
+        code = self.api_client.post("/order", body, format="json").status_code
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, code)
+
+    def test_order_unathorized(self):
+        api_client = APIClient()
+        code = api_client.post("/order").status_code
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, code)

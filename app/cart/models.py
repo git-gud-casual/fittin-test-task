@@ -14,7 +14,7 @@ class Cart(models.Model):
 
     @property
     def final_price(self):
-        return sum(self.products.through.all())
+        return sum(map(lambda x: x.final_price, self.products.through.objects.all()))
 
     def __str__(self):
         return f"{self.user.username}`s cart"

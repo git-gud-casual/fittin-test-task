@@ -77,11 +77,11 @@ class OrderView(generics.CreateAPIView):
     def get_serializer(self, *args, **kwargs):
         if self.request.method == "POST":
             kwargs["many"] = True
+            kwargs["allow_empty"] = False
         return self.get_serializer_class()(*args, **kwargs)
 
     def perform_create(self, serializer: OrderEntrySerializer):
         entries_data = serializer.validated_data
-        print(entries_data)
         qs = CartEntry.objects.filter(cart=self.request.user.cart)
         try:
             entries = [qs.get(product__product_id=data["product"]["product_id"],
@@ -93,7 +93,7 @@ class OrderView(generics.CreateAPIView):
                 )
                 order_entries = []
                 for entry in entries:
-                    if entry.product.count_in_stock < entry.product.count:
+                    if entry.product.count_in_stock < entry.count:
                         raise ValidationError({"message": "order count bigger than count in stock"})
                     order_entry = OrderEntry(
                         order=order,
