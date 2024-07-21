@@ -70,14 +70,14 @@ class ProductListView(generics.ListAPIView):
         return self.paginator.get_paginated_response(ProductSerializer(qs, many=True).data)
 
     @swagger_auto_schema(manual_parameters=[
-                             openapi.Parameter("min_price", openapi.IN_QUERY,
-                                               type=openapi.TYPE_INTEGER, default=0),
-                             openapi.Parameter("max_price", openapi.IN_QUERY,
-                                               type=openapi.TYPE_INTEGER),
-                             openapi.Parameter("sort_by", openapi.IN_QUERY,
-                                               type=openapi.TYPE_STRING, enum=["price_up", "price_down"],
-                                               default="without sort"),
-                         ])
+        openapi.Parameter("min_price", openapi.IN_QUERY,
+                          type=openapi.TYPE_INTEGER, default=0),
+        openapi.Parameter("max_price", openapi.IN_QUERY,
+                          type=openapi.TYPE_INTEGER),
+        openapi.Parameter("sort_by", openapi.IN_QUERY,
+                          type=openapi.TYPE_STRING, enum=["price_up", "price_down"],
+                          default="without sort"),
+    ])
     def get(self, *args, **kwargs):
         return super().get(*args, **kwargs)
 
@@ -86,12 +86,13 @@ class ProductListView(generics.ListAPIView):
             min_value = int(self.request.query_params.get("min_price", 0))
             max_value = int(self.request.query_params.get("max_price", -1))
             sort_by = self.request.query_params.get("sort_by")
-            q = Product.objects.filter(price__gte=min_value).annotate(
+            q = Product.objects.annotate(
                 total_count=Sum("sizes__count_in_stock"),
-                total_price=F("price") - F("price") * (Coalesce(F("discount__discount_count"), 0) * 0.01)
-            ).filter(total_count__gt=0)
+                total_price=F("price") - F("price") * (
+                        Coalesce(F("discount__discount_count"), 0) * 0.01)
+            ).filter(total_price__gte=min_value).filter(total_count__gt=0)
             if max_value >= 0:
-                q = q.filter(price__lte=max_value)
+                q = q.filter(total_price__lte=max_value)
             if sort_by == "price_up":
                 q = q.order_by("total_price")
             elif sort_by == "price_down":

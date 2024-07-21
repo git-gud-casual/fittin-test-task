@@ -10,7 +10,8 @@ from django.conf import settings
 
 
 def get_token_page(request: HttpRequest) -> HttpResponse:
-    message = "Не передан обязательный query параметр \"code\""
+    message = "<a href=\"https://oauth.yandex.ru/authorize?" + \
+              "response_type=code&client_id=4fa9cb22324047cba05d3ffeab4deeb7\">Авторизоваться через Yandex ID</a>"
     if code := request.GET.get("code"):
         message = "Ошибка при запросе OAuth токена Yandex.ID"
         if (resp := requests.post("https://oauth.yandex.ru/token",
