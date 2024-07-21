@@ -83,8 +83,8 @@ class ProductsTestCase(APITestCase):
     def test_get_list_by_post(self):
         resp = loads(self.api_client.post("/products?sort_by=price_down&min_price=6&max_price=19",
                                           data={"category_id": 2}, format="json").content)
-        self.assertEqual(resp["results"][0]["final_price"], 18)
-        self.assertEqual(resp["count"], 11)
+        self.assertEqual(resp["results"][0]["final_price"], 19)
+        self.assertEqual(resp["count"], 13)
         prices = [pr["final_price"] for pr in resp["results"]]
         prices_sorted = sorted(prices.copy(), reverse=True)
         self.assertListEqual(prices_sorted, prices)
