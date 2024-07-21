@@ -55,4 +55,4 @@ https://46.72.238.25:8889/admin/
 
 В example.env перечислены и подписаны необходимые переменные среды
 
-![Deploy](https://github.com/git-gud-casual/fittin-test-task/blob/master/.github/workflows/deploy-dev.yml/badge.svg?branch=master)
+![Deploy](https://github.com/git-gud-casual/fittin-test-task/actions/workflows/deploy-dev.yml/badge.svg?branch=master)
