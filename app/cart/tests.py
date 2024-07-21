@@ -172,19 +172,21 @@ class ProductsTestCase(APITestCase):
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, code)
 
     def test_order1(self):
-        code = self.api_client.post("/order", [], format="json").status_code
+        code = self.api_client.post("/order", {"orders": []}, format="json").status_code
         self.assertEqual(status.HTTP_400_BAD_REQUEST, code)
 
     def test_order2(self):
         size = self.sizes[0]
-        body = [
+        body = {"orders": [
             {
                 "product_id": size.product.id,
                 "size": size.size
             }
-        ]
+        ]}
         entry = self.user.cart.products.through.objects.get(product=size)
-        code = self.api_client.post("/order", body, format="json").status_code
+        resp = self.api_client.post("/order", body, format="json")
+        self.assertIsNotNone(loads(resp.content).get("order_id"))
+        code = resp.status_code
         self.assertEqual(status.HTTP_201_CREATED, code)
         self.assertEqual(self.user.orders.first().final_price, entry.final_price)
         with self.assertRaises(CartEntry.DoesNotExist):
@@ -195,7 +197,7 @@ class ProductsTestCase(APITestCase):
 
     def test_order3(self):
         size1, size2 = self.sizes[0], self.sizes[-1]
-        body = [
+        body = {"orders": [
             {
                 "product_id": size1.product.id,
                 "size": size1.size
@@ -204,9 +206,11 @@ class ProductsTestCase(APITestCase):
                 "product_id": size2.product.id,
                 "size": size2.size
             }
-        ]
+        ]}
         final_price = self.user.cart.final_price
-        code = self.api_client.post("/order", body, format="json").status_code
+        resp = self.api_client.post("/order", body, format="json")
+        self.assertIsNotNone(loads(resp.content).get("order_id"))
+        code = resp.status_code
         self.assertEqual(status.HTTP_201_CREATED, code)
         for entry in self.cart_entries:
             size = entry.product
@@ -221,23 +225,25 @@ class ProductsTestCase(APITestCase):
         size = self.sizes[-1]
         size.count_in_stock = 0
         size.save()
-        body = [
+        body = {"orders": [
             {
                 "product_id": size.product.id,
                 "size": size.size
             }
-        ]
+        ]}
         code = self.api_client.post("/order", body, format="json").status_code
         self.assertEqual(status.HTTP_400_BAD_REQUEST, code)
 
     def test_order5(self):
         size = self.sizes[-1]
-        body = [
-            {
-                "product_id": size.product.id,
-                "size": "s"
-            }
-        ]
+        body = {
+            "orders": [
+                {
+                    "product_id": size.product.id,
+                    "size": "s"
+                }
+            ]
+        }
         code = self.api_client.post("/order", body, format="json").status_code
         self.assertEqual(status.HTTP_400_BAD_REQUEST, code)
 

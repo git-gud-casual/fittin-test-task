@@ -5,7 +5,7 @@ from rest_framework.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 
-from .serializers import CartEntrySerializer, OrderEntrySerializer
+from .serializers import CartEntrySerializer, OrderEntrySerializer, OrderSerializer
 from .models import CartEntry, ProductSize, OrderEntry, Order
 
 
@@ -70,18 +70,12 @@ class CartViewSet(viewsets.GenericViewSet,
 
 
 class OrderView(generics.CreateAPIView):
-    serializer_class = OrderEntrySerializer
+    serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
-    def get_serializer(self, *args, **kwargs):
-        if self.request.method == "POST":
-            kwargs["many"] = True
-            kwargs["allow_empty"] = False
-        return self.get_serializer_class()(*args, **kwargs)
-
     def perform_create(self, serializer: OrderEntrySerializer):
-        entries_data = serializer.validated_data
+        entries_data = serializer.validated_data["entries"]
         qs = CartEntry.objects.filter(cart=self.request.user.cart)
         try:
             entries = [qs.get(product__product_id=data["product"]["product_id"],
@@ -108,5 +102,6 @@ class OrderView(generics.CreateAPIView):
                 OrderEntry.objects.bulk_create(
                     order_entries
                 )
+                serializer.instance = order
         except CartEntry.DoesNotExist:
             raise ValidationError({"message": "not in cart"})
